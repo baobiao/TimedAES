@@ -58,22 +58,56 @@ public class Encryption
         (new SecureRandom()).nextBytes(initVector);
         
         // First version of design is to overwrite the least significant 2 bytes of initVector (nonce) with the extra data.
+        boolean valuesOutOfBounds = false;
+        if(allowByValue < 0)
+        {
+            valuesOutOfBounds = true;
+        }
         switch(allowByUOM)
         {
             case MONTH:
-                initVector[AESGCM_NONCE_LENGTH-2] = (byte)0;
+                if(allowByValue < 12)
+                {
+                    initVector[AESGCM_NONCE_LENGTH-2] = (byte)0;
+                }
+                else
+                {
+                    valuesOutOfBounds = true;
+                }
                 break;
             case DAYOFMONTH:
-                initVector[AESGCM_NONCE_LENGTH-2] = (byte)1;
+                if(allowByValue < 31)
+                {
+                    initVector[AESGCM_NONCE_LENGTH-2] = (byte)1;
+                }
+                else
+                {
+                    valuesOutOfBounds = true;
+                }
                 break;
             case DAYOFWEEK:
-                initVector[AESGCM_NONCE_LENGTH-2] = (byte)2;
+                if(allowByValue < 7)
+                {
+                    initVector[AESGCM_NONCE_LENGTH-2] = (byte)2;
+                }
+                else
+                {
+                    valuesOutOfBounds = true;
+                }
                 break;
             case HOUR:
-                initVector[AESGCM_NONCE_LENGTH-2] = (byte)3;
-                break;
-            default:
-                // Do nothing
+                if(allowByValue < 24)
+                {
+                    initVector[AESGCM_NONCE_LENGTH-2] = (byte)3;
+                }
+                else
+                {
+                    valuesOutOfBounds = true;
+                }
+        }
+        if(valuesOutOfBounds)
+        {
+            throw new IllegalArgumentException("Permissible values out-of-bounds.");
         }
         initVector[AESGCM_NONCE_LENGTH-1] = (byte)allowByValue;
         
